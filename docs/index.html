@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tennis IA — Intelligence Artificielle de Prédictions Tennis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #2d9e56;
+    --green-light: #4ade80;
+    --green-dark: #1a6b3a;
+    --navy: #0a1628;
+    --navy-mid: #0d2137;
+    --white: #ffffff;
+    --gray: rgba(255,255,255,0.55);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--navy); color: var(--white); overflow-x: hidden; }
+  .bg-grid {
+    position: fixed; inset: 0; z-index: 0;
+    background-image: linear-gradient(rgba(45,158,86,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(45,158,86,0.04) 1px, transparent 1px);
+    background-size: 60px 60px; pointer-events: none;
+  }
+  .bg-glow {
+    position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+    width: 800px; height: 600px;
+    background: radial-gradient(ellipse, rgba(45,158,86,0.12) 0%, transparent 70%);
+    pointer-events: none; z-index: 0;
+  }
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 40px;
+    background: rgba(10,22,40,0.85); backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(45,158,86,0.15);
+  }
+  .nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: 2px; }
+  .nav-logo span { color: var(--green-light); }
+  .nav-dl {
+    background: var(--green); color: white; border: none;
+    padding: 10px 22px; border-radius: 8px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight: 600;
+    cursor: pointer; text-decoration: none; transition: background 0.2s, transform 0.2s;
+  }
+  .nav-dl:hover { background: var(--green-dark); transform: translateY(-1px); }
+  .hero {
+    position: relative; z-index: 1; min-height: 100vh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; padding: 120px 24px 80px;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(45,158,86,0.12); border: 1px solid rgba(45,158,86,0.3);
+    padding: 6px 16px; border-radius: 100px; font-size: 0.8rem; font-weight: 500;
+    color: var(--green-light); margin-bottom: 28px; animation: fadeUp 0.6s ease both;
+  }
+  .badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green-light); animation: pulse 2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.5; transform:scale(1.4); } }
+  .hero h1 { font-family: 'Bebas Neue', sans-serif; font-size: clamp(4rem, 12vw, 9rem); line-height: 0.9; letter-spacing: 4px; animation: fadeUp 0.6s 0.1s ease both; }
+  .hero h1 .accent { color: var(--green-light); }
+  .hero-sub { font-size: clamp(1rem, 2.5vw, 1.25rem); color: var(--gray); max-width: 520px; line-height: 1.6; margin: 20px auto 40px; font-weight: 300; animation: fadeUp 0.6s 0.2s ease both; }
+  .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; animation: fadeUp 0.6s 0.3s ease both; }
+  .btn-primary {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: linear-gradient(135deg, var(--green-dark), var(--green));
+    color: white; text-decoration: none; padding: 16px 32px; border-radius: 12px;
+    font-size: 1rem; font-weight: 600; box-shadow: 0 8px 32px rgba(45,158,86,0.35);
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(45,158,86,0.5); }
+  .btn-secondary {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15);
+    color: white; text-decoration: none; padding: 16px 28px; border-radius: 12px;
+    font-size: 1rem; font-weight: 500; transition: background 0.2s, transform 0.2s;
+  }
+  .btn-secondary:hover { background: rgba(255,255,255,0.1); transform: translateY(-3px); }
+  .stats-row { display: flex; gap: 0; flex-wrap: wrap; justify-content: center; margin-top: 64px; animation: fadeUp 0.6s 0.4s ease both; }
+  .stat { padding: 20px 36px; border-right: 1px solid rgba(255,255,255,0.08); text-align: center; }
+  .stat:last-child { border-right: none; }
+  .stat-val { font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem; letter-spacing: 2px; color: var(--green-light); }
+  .stat-lbl { font-size: 0.75rem; color: var(--gray); font-weight: 500; margin-top: 2px; text-transform: uppercase; letter-spacing: 1px; }
+  .section { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 80px 24px; }
+  .section-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 3px; color: var(--green-light); margin-bottom: 12px; }
+  .section-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(2.5rem, 6vw, 4rem); letter-spacing: 2px; line-height: 1; margin-bottom: 48px; }
+  .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
+  .feature-card {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(45,158,86,0.15);
+    border-radius: 16px; padding: 28px; transition: border-color 0.2s, transform 0.2s, background 0.2s;
+  }
+  .feature-card:hover { border-color: rgba(45,158,86,0.4); background: rgba(45,158,86,0.05); transform: translateY(-4px); }
+  .feature-icon { font-size: 2rem; margin-bottom: 16px; }
+  .feature-title { font-size: 1.05rem; font-weight: 600; margin-bottom: 8px; }
+  .feature-desc { font-size: 0.88rem; color: var(--gray); line-height: 1.6; }
+  .feature-acc { display: inline-block; margin-top: 14px; background: rgba(45,158,86,0.15); color: var(--green-light); font-size: 0.8rem; font-weight: 600; padding: 4px 12px; border-radius: 100px; }
+  .dl-section {
+    position: relative; z-index: 1;
+    background: linear-gradient(135deg, rgba(26,107,58,0.2), rgba(13,33,55,0.8));
+    border-top: 1px solid rgba(45,158,86,0.15); border-bottom: 1px solid rgba(45,158,86,0.15);
+    padding: 80px 24px; text-align: center;
+  }
+  .dl-card { max-width: 520px; margin: 0 auto; background: rgba(255,255,255,0.04); border: 1px solid rgba(45,158,86,0.25); border-radius: 20px; padding: 40px; }
+  .dl-icon { font-size: 3rem; margin-bottom: 16px; }
+  .dl-title { font-family: 'Bebas Neue', sans-serif; font-size: 2rem; letter-spacing: 2px; margin-bottom: 8px; }
+  .dl-desc { color: var(--gray); font-size: 0.9rem; margin-bottom: 28px; line-height: 1.6; }
+  .dl-meta { display: flex; gap: 16px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+  .dl-meta span { font-size: 0.78rem; color: var(--gray); }
+  .steps { max-width: 600px; margin: 48px auto 0; text-align: left; }
+  .step { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 20px; }
+  .step-num { width: 32px; height: 32px; flex-shrink: 0; background: var(--green-dark); border: 1px solid var(--green); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 700; color: var(--green-light); }
+  .step-text { font-size: 0.9rem; color: var(--gray); line-height: 1.6; padding-top: 5px; }
+  .step-text strong { color: var(--white); }
+  footer { position: relative; z-index: 1; text-align: center; padding: 40px 24px; border-top: 1px solid rgba(255,255,255,0.06); color: var(--gray); font-size: 0.82rem; }
+  footer strong { color: var(--green-light); }
+  @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+  @media (max-width: 600px) { nav { padding: 16px 20px; } .stat { padding: 16px 20px; } .dl-card { padding: 28px 20px; } }
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="bg-glow"></div>
+
+<nav>
+  <div class="nav-logo">Tennis <span>IA</span></div>
+  <a href="app-release-signed.apk" class="nav-dl" download>📥 Télécharger</a>
+</nav>
+
+<section class="hero">
+  <div class="hero-badge"><div class="badge-dot"></div>100% Gratuit · Sans publicité</div>
+  <h1>TENNIS<br><span class="accent">IA</span></h1>
+  <p class="hero-sub">Intelligence artificielle de prédictions tennis.<br>ATP · WTA · Challengers · ITF · 830 000+ matchs analysés.</p>
+  <div class="hero-btns">
+    <a href="app-release-signed.apk" class="btn-primary" download>📥 Télécharger l'APK Android</a>
+    <a href="https://fulgence10-tennis-ia.hf.space" class="btn-secondary" target="_blank">🌐 Version Web</a>
+  </div>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-val">67.8%</div><div class="stat-lbl">Précision vainqueur</div></div>
+    <div class="stat"><div class="stat-val">70.9%</div><div class="stat-lbl">Précision nb sets</div></div>
+    <div class="stat"><div class="stat-val">69.5%</div><div class="stat-lbl">Précision handicap</div></div>
+    <div class="stat"><div class="stat-val">830K+</div><div class="stat-lbl">Matchs analysés</div></div>
+    <div class="stat"><div class="stat-val">26K+</div><div class="stat-lbl">Joueurs</div></div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-label">Fonctionnalités</div>
+  <div class="section-title">CE QUE FAIT<br>TENNIS IA</div>
+  <div class="features-grid">
+    <div class="feature-card"><div class="feature-icon">🏆</div><div class="feature-title">Prédiction vainqueur</div><div class="feature-desc">Analyse ELO, forme récente, H2H et surface pour prédire le vainqueur du match.</div><span class="feature-acc">67.8% de précision</span></div>
+    <div class="feature-card"><div class="feature-icon">🔢</div><div class="feature-title">Nombre de sets</div><div class="feature-desc">Prédit si le match se jouera en 2 ou 3 sets en analysant les profils des joueurs.</div><span class="feature-acc">70.9% de précision</span></div>
+    <div class="feature-card"><div class="feature-icon">⚖️</div><div class="feature-title">Handicap sets</div><div class="feature-desc">Analyse le différentiel de sets pour les paris handicap — prédiction avancée.</div><span class="feature-acc">69.5% de précision</span></div>
+    <div class="feature-card"><div class="feature-icon">📅</div><div class="feature-title">Matchs du jour</div><div class="feature-desc">Tous les matchs du jour avec prédictions en temps réel. ATP, WTA, Challengers, ITF.</div><span class="feature-acc">Mis à jour quotidiennement</span></div>
+    <div class="feature-card"><div class="feature-icon">👤</div><div class="feature-title">Profils joueurs</div><div class="feature-desc">Statistiques détaillées de 26 802 joueurs — ELO, forme, surface préférée, H2H.</div><span class="feature-acc">26 802 joueurs</span></div>
+    <div class="feature-card"><div class="feature-icon">📊</div><div class="feature-title">Performance IA</div><div class="feature-desc">Suivez les performances de l'IA et consultez l'historique de vos prédictions.</div><span class="feature-acc">Historique complet</span></div>
+  </div>
+</section>
+
+<section class="dl-section">
+  <div class="dl-card">
+    <div class="dl-icon">📱</div>
+    <div class="dl-title">TÉLÉCHARGER L'APK</div>
+    <div class="dl-desc">Application Android native · 100% gratuite · Sans publicité<br>Compatible Android 5.0 et supérieur</div>
+    <a href="app-release-signed.apk" class="btn-primary" download style="display:inline-flex;justify-content:center;">📥 Télécharger Tennis IA APK</a>
+    <div class="dl-meta">
+      <span>✅ Gratuit</span>
+      <span>✅ Sans pub</span>
+      <span>✅ Android 5.0+</span>
+      <span>✅ ~1 Mo</span>
+    </div>
+  </div>
+  <div class="steps">
+    <div class="section-label" style="text-align:center;margin-bottom:24px;">Installation</div>
+    <div class="step"><div class="step-num">1</div><div class="step-text"><strong>Téléchargez l'APK</strong> en cliquant sur le bouton ci-dessus</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-text"><strong>Autorisez les sources inconnues</strong> dans Paramètres → Sécurité → Sources inconnues</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-text"><strong>Ouvrez le fichier APK</strong> téléchargé et appuyez sur Installer</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-text"><strong>Lancez Tennis IA</strong> depuis votre écran d'accueil 🎾</div></div>
+  </div>
+</section>
+
+<footer>
+  <p>🎾 <strong>Tennis IA</strong> · Intelligence Artificielle de Prédictions Tennis</p>
+  <p style="margin-top:8px;">Également disponible sur <a href="https://fulgence10-tennis-ia.hf.space" target="_blank" style="color:var(--green-light);text-decoration:none;">Hugging Face</a></p>
+</footer>
+
+</body>
+</html>
